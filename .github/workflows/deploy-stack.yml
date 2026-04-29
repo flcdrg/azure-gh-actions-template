@@ -80,6 +80,7 @@ jobs:
           scope: resourceGroup
           operation: create
           action-on-unmanage-resources: delete
+          deny-settings-mode: none
      
       - name: Get deployment outputs
         id: outputs
