@@ -40,11 +40,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Generate deployment stack name with timestamp
-        id: deployment-name
-        run: |
-          DEPLOYMENT_NAME="${{ env.DEPLOYMENT_STACK_NAME }}-$(date +%s)"
-          echo "name=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
       - name: Azure Login (OIDC)
         uses: azure/login@v3
         with:
@@ -71,7 +66,7 @@ jobs:
         id: deploy
         uses: Azure/bicep-deploy@v2
         with:
-          name: ${{ steps.deployment-name.outputs.name }}
+          name: ${{ env.DEPLOYMENT_STACK_NAME }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           template-file: ./infra/main.bicep
@@ -89,7 +84,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           OUTPUTS=$(az stack group show \
-            --name "${{ steps.deployment-name.outputs.name }}" \
+            --name "${{ env.DEPLOYMENT_STACK_NAME }}" \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --query outputs)
 
@@ -103,5 +98,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
           echo "**Resource Group:** ${{ env.RESOURCE_GROUP_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Name:** ${{ steps.deployment-name.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Name:** ${{ env.DEPLOYMENT_STACK_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Stack Name:** ${{ env.DEPLOYMENT_STACK_NAME }}" >> $GITHUB_STEP_SUMMARY

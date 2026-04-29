@@ -19,15 +19,18 @@ jobs:
     name: Destroy Deployment Stack
     runs-on: ubuntu-latest
     steps:
+      - name: empty
+        run: |
+          touch empty.bicep
       - name: Create or update deployment stack
         id: deploy
         uses: Azure/bicep-deploy@v2
         with:
-          name: "Destroy"
+          name: ${{ env.DEPLOYMENT_STACK_NAME }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           type: deploymentStack
           scope: resourceGroup
-          operation: create
+          operation: delete
           action-on-unmanage-resources: delete
           deny-settings-mode: none
