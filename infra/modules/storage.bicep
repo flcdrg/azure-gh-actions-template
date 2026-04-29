@@ -44,25 +44,10 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     }
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: 'Allow'
+      defaultAction: 'Deny'
     }
   }
   tags: tags
-}
-
-// Blob services (required for deployment stacks state)
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-// Container for deployment stack state files
-resource stateContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobServices
-  name: 'deployment-stacks-state'
-  properties: {
-    publicAccess: 'None'
-  }
 }
 
 output storageAccountId string = storageAccount.id
