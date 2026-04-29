@@ -1,7 +1,10 @@
-name: Destroy Deployment Stack
+name: Destroy
 
 on:
   workflow_dispatch:
+  
+  schedule:
+    - cron: '0 0 * * *' # Every night at midnight
 
 env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -9,7 +12,6 @@ env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
   DEPLOYMENT_STACK_NAME: "stack-dev"
-  ENVIRONMENT: "dev"
 
 permissions:
   id-token: write
