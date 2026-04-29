@@ -38,7 +38,6 @@ export ENVIRONMENT="dev"
 # GitHub settings
 export GITHUB_ORG="your-org-or-username"
 export GITHUB_REPO="azure-gh-actions-template"
-
 ```
 
 **PowerShell:**
@@ -57,13 +56,12 @@ $ENVIRONMENT = "dev"
 # GitHub settings
 $GITHUB_ORG = "your-org-or-username"
 $GITHUB_REPO = "azure-gh-actions-template"
-
 ```
 
 Get your subscription ID and tenant ID:
 
 ```bash
-az account show --query "{id: id, tenantId: tenantId}" --output table
+az account show --query "{id: id, tenantId: tenantId}"
 ```
 
 ## Step 2: Create Resource Group
