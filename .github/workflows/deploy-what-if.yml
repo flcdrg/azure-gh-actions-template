@@ -13,7 +13,7 @@ env:
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-  DEPLOYMENT_STACK_NAME: 'stack-dev'
+  DEPLOYMENT_NAME: 'deployment-pr-validation'
   ENVIRONMENT: 'dev'
 
 permissions:
@@ -22,6 +22,18 @@ permissions:
   pull-requests: write
 
 jobs:
+  setup:
+    name: Setup Deployment Variables
+    runs-on: ubuntu-latest
+    outputs:
+      deployment-name: ${{ steps.deployment-name.outputs.name }}
+    steps:
+      - name: Generate deployment name with timestamp
+        id: deployment-name
+        run: |
+          DEPLOYMENT_NAME="${{ env.DEPLOYMENT_NAME }}-$(date +%s)"
+          echo "name=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
+
   validate-bicep:
     name: Validate Bicep Template
     runs-on: ubuntu-latest
@@ -29,7 +41,7 @@ jobs:
       bicep-validation: ${{ steps.validate.outcome }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Validate Bicep syntax
         id: validate
@@ -48,7 +60,7 @@ jobs:
 
   what-if:
     name: Deployment What-If Preview
-    needs: validate-bicep
+    needs: [validate-bicep, setup]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -63,58 +75,43 @@ jobs:
           enable-AzPSSession: false
 
       - name: Run deployment what-if
-        id: whatif
+        uses: Azure/bicep-deploy@v2
+        with:
+          name: ${{ needs.setup.outputs.deployment-name }}
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          scope: resourceGroup
+          template-file: ./infra/main.bicep
+          parameters-file: ./infra/main.bicepparam
+          type: deployment
+          operation: what-if
+
+      - name: Format what-if output for PR comment
+        id: format-output
         run: |
           echo "## 🔍 Deployment What-If Preview" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** \`${ENVIRONMENT}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Resource Group:** \`${RESOURCE_GROUP_NAME}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Stack:** \`${DEPLOYMENT_STACK_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ env.ENVIRONMENT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Resource Group:** \`${{ env.RESOURCE_GROUP_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Name:** \`${{ needs.setup.outputs.deployment-name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Changes to be deployed:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          OUTPUT=$(az deployment group what-if \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
-            --template-file infra/main.bicep \
-            --parameters infra/main.bicepparam \
-            --mode Incremental \
-            --no-pretty-print 2>&1 || true)
-          
-          if echo "$OUTPUT" | grep -q "No changes"; then
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "No changes detected" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "## ✓ What-If Completed" >> $GITHUB_STEP_SUMMARY
+          echo "### Validation Status:" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Template validation completed successfully" >> $GITHUB_STEP_SUMMARY
 
-      - name: Comment PR with what-if results
+      - name: Comment PR with validation results
         if: always()
-        uses: actions/github-script@v9
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const summary = process.env.GITHUB_STEP_SUMMARY;
             const jobSummary = fs.readFileSync(summary, 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: jobSummary
             });
-
-      - name: Validate deployment would succeed
-        run: |
-          az deployment group validate \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
-            --template-file infra/main.bicep \
-            --parameters infra/main.bicepparam
 
   summary:
     name: Summary

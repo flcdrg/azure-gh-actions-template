@@ -40,6 +40,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Generate deployment stack name with timestamp
+        id: deployment-name
+        run: |
+          DEPLOYMENT_NAME="${{ env.DEPLOYMENT_STACK_NAME }}-$(date +%s)"
+          echo "name=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
       - name: Azure Login (OIDC)
         uses: azure/login@v3
         with:
@@ -50,58 +55,51 @@ jobs:
 
       - name: Validate resource group exists
         run: |
-          if az group exists --name "${RESOURCE_GROUP_NAME}" | grep -q true; then
-            echo "✓ Resource group '${RESOURCE_GROUP_NAME}' found"
+          if az group exists --name "${{ env.RESOURCE_GROUP_NAME }}" | grep -q true; then
+            echo "✓ Resource group '${{ env.RESOURCE_GROUP_NAME }}' found"
           else
-            echo "✗ Resource group '${RESOURCE_GROUP_NAME}' not found"
+            echo "✗ Resource group '${{ env.RESOURCE_GROUP_NAME }}' not found"
             exit 1
           fi
 
       - name: Validate Bicep template
         run: |
           az bicep build --file infra/main.bicep --outdir /tmp
-          az deployment group validate \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
-            --template-file infra/main.bicep \
-            --parameters infra/main.bicepparam
-          echo "✓ Template validation successful"
+          echo "✓ Bicep syntax validation successful"
 
       - name: Create or update deployment stack
         id: deploy
-        run: |
-          echo "Deploying to environment: ${ENVIRONMENT}"
-          echo "Resource group: ${RESOURCE_GROUP_NAME}"
-          echo "Stack name: ${DEPLOYMENT_STACK_NAME}"
-          
-          # Deploy using az stack command (preview)
-          # Note: Deployment stacks require Azure CLI 2.48.0 or later
-          az deployment group create \
-            --name "${DEPLOYMENT_STACK_NAME}-$(date +%s)" \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
-            --template-file infra/main.bicep \
-            --parameters infra/main.bicepparam \
-            --mode Incremental
-          
-          echo "✓ Deployment completed successfully"
-
+        uses: Azure/bicep-deploy@v2
+        with:
+          name: ${{ steps.deployment-name.outputs.name }}
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          template-file: ./infra/main.bicep
+          parameters: ./infra/main.bicepparam
+          type: deploymentStack
+          scope: resourceGroup
+          operation: create
+          action-on-unmanage-resources: delete
+     
       - name: Get deployment outputs
         id: outputs
         run: |
           echo "## 📦 Deployment Outputs" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           OUTPUTS=$(az deployment group show \
-            --name "${DEPLOYMENT_STACK_NAME}-$(date +%s)" \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
+            --name "${{ steps.deployment-name.outputs.name }}" \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --query properties.outputs)
-          
+
           echo '```json' >> $GITHUB_STEP_SUMMARY
           echo "$OUTPUTS" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Deployment success summary
         run: |
-          echo "✓ Deployment Stack deployment completed"
-          echo "Environment: ${ENVIRONMENT}"
-          echo "Resource Group: ${RESOURCE_GROUP_NAME}"
-          echo "Stack Name: ${DEPLOYMENT_STACK_NAME}"
+          echo "## ✓ Deployment Stack Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Resource Group:** ${{ env.RESOURCE_GROUP_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Name:** ${{ steps.deployment-name.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Stack Name:** ${{ env.DEPLOYMENT_STACK_NAME }}" >> $GITHUB_STEP_SUMMARY

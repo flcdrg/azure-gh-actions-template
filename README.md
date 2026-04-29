@@ -72,7 +72,7 @@ Edit the Bicep parameters for your environment:
 
 ```bash
 # Edit dev environment parameters
-vim infra/main.parameters.dev.json
+vim infra/main.bicepparam
 
 # Update values:
 # - location: Azure region for deployment
@@ -96,8 +96,8 @@ git push origin feature/my-changes
 The PR workflow (`deploy-what-if.yml`) will:
 
 - ✅ Validate Bicep syntax
-- ✅ Run deployment what-if preview
-- ✅ Comment on the PR with expected changes
+- ✅ Validate template deployment (without actual deployment)
+- ✅ Comment on the PR with validation results
 
 Merge the PR to deploy to dev:
 

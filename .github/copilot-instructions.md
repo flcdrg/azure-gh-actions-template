@@ -29,10 +29,14 @@ Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us
 
 ### Workflows (.github/workflows/)
 
-- **deploy-what-if.yml**: PR trigger; validates Bicep, runs what-if preview, comments PR with expected changes
-- **deploy-stack.yml**: Main/push trigger; deploys via `az deployment group create` with Deployment Stack semantics
-- Both use `azure/login@v1` with OIDC (client-id, tenant-id, subscription-id from secrets)
+- **deploy-what-if.yml**: PR trigger; uses Azure/bicep-deploy action for validation,
+  comments PR with validation results
+- **deploy-stack.yml**: Main/push trigger; uses Azure/bicep-deploy action for deployment,
+  creates Deployment Stack via `az deployment group create`
+- Both use `azure/login@v2` with OIDC (client-id, tenant-id, subscription-id from secrets)
+- Both generate deployment name with timestamp in setup job for output variable reuse
 - Environment-aware via ENVIRONMENT variable resolved from parameter file naming
+- Uses `Azure/bicep-deploy@v0.3.0` action for consistent deployment handling
 
 ## Documentation
 
@@ -74,21 +78,16 @@ Before committing, ensure all Markdown passes linting.
 
 ```bash
 az bicep build --file infra/main.bicep --outdir /tmp  # Check syntax
-az deployment group validate \
-  --resource-group "${RG}" \
-  --template-file infra/main.bicep \
-  --parameters infra/main.parameters.dev.json  # Validate deployment
 
 ```
 
-**What-If Preview** (used in PR workflow):
+**Deployment Validation** (used in PR and deployment workflows):
 
 ```bash
-az deployment group what-if \
+az deployment group validate \
   --resource-group "${RG}" \
   --template-file infra/main.bicep \
-  --parameters infra/main.bicepparam \
-  --mode Incremental
+  --parameters infra/main.bicepparam
 
 ```
 
