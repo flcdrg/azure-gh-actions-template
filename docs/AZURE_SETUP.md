@@ -99,7 +99,7 @@ az group show --name $AZURE_RESOURCE_GROUP
 SP_OUTPUT=$(az ad sp create-for-rbac \
   --name "sp-github-${APP_NAME}-${ENVIRONMENT}" \
   --role Contributor \
-  --scopes "/subscriptions/${AZURE_SUBSCRIPTION_ID}" \
+  --scopes "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP}" \
   --output json)
 
 # Extract values for use in later steps
@@ -120,7 +120,7 @@ $spName = "sp-github-$APP_NAME-$ENVIRONMENT"
 $SP_OUTPUT = az ad sp create-for-rbac `
   --name $spName `
   --role Contributor `
-  --scopes "/subscriptions/$AZURE_SUBSCRIPTION_ID" `
+  --scopes "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP" `
   --output json | ConvertFrom-Json
 
 # Extract values for use in later steps
@@ -165,10 +165,9 @@ $fedCredMain = @{
   description = "GitHub Actions deployment from main branch"
 } | ConvertTo-Json
 
-az ad app federated-credential create `
-  --id $AZURE_CLIENT_ID `
-  --parameters $fedCredMain
-
+$fedCredMain | az ad app federated-credential create `
+   --id $AZURE_CLIENT_ID `
+   --parameters "@-"
 ```
 
 ### 4b: Pull request validation (PR events)
@@ -198,9 +197,9 @@ $fedCredPR = @{
   description = "GitHub Actions validation for pull requests"
 } | ConvertTo-Json
 
-az ad app federated-credential create `
-  --id $AZURE_CLIENT_ID `
-  --parameters $fedCredPR
+$fedCredPR | az ad app federated-credential create `
+   --id $AZURE_CLIENT_ID `
+   --parameters "@-"
 ```
 
 Verify federated credentials were created:
@@ -385,7 +384,7 @@ Once PR is merged to main:
    az role assignment create \
      --assignee "${AZURE_CLIENT_ID}" \
      --role Contributor \
-     --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}"
+     --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP}"
    ```
 
    **PowerShell:**
@@ -394,7 +393,7 @@ Once PR is merged to main:
    az role assignment create `
      --assignee $AZURE_CLIENT_ID `
      --role Contributor `
-     --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID"
+     --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP"
    ```
 
 ### Resource Group Not Found

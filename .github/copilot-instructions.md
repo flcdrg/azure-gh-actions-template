@@ -131,7 +131,7 @@ To add new environments (staging, prod):
 
 - **OIDC vs Static Credentials**: Uses federated credentials (no secrets stored in GitHub)
 - **Token Exchange**: GitHub Actions issues OIDC token; Azure/login action exchanges for managed identity token
-- **Scope**: Service principal has Contributor role at subscription level (adjust for least privilege as needed)
+- **Scope**: Service principal has Contributor role at resource group level (least privilege by default)
 - **Deployment Stacks**: ARM feature; manages resource lifecycle and prevents accidental deletions
 - **Audit**: All deployments logged in Azure Activity Log; PR comments include what-if output for change review
 

@@ -51,7 +51,7 @@ az group create --name "${AZURE_RESOURCE_GROUP}" --location eastus
 az ad sp create-for-rbac \
   --name "sp-github-myapp-dev" \
   --role Contributor \
-  --scopes "/subscriptions/${AZURE_SUBSCRIPTION_ID}"
+   --scopes "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP}"
 
 # Create federated credentials (see AZURE_SETUP.md for full commands)
 
@@ -136,7 +136,7 @@ Merge the PR to deploy to dev:
 
 - **OIDC Federated Credentials**: No static credentials stored in GitHub Secrets
 - **Short-Lived Tokens**: GitHub Issues OIDC tokens valid for 10 minutes
-- **Least Privilege**: Service principal scoped to specific subscription and actions
+- **Least Privilege**: Service principal scoped to the deployment resource group
 - **Secure Communication**: All communication over HTTPS with verified tokens
 
 [Learn more about OIDC security](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
