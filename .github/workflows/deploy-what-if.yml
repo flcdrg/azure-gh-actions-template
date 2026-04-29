@@ -1,20 +1,19 @@
-name: Deployment What-If (PR Validation)
+name: Deployment What-If
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'infra/**'
-      - '.github/workflows/deploy-what-if.yml'
+      - "infra/**"
+      - ".github/workflows/deploy-what-if.yml"
 
 env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-  DEPLOYMENT_NAME: 'deployment-pr-validation'
-  ENVIRONMENT: 'dev'
+  ENVIRONMENT: "dev"
 
 permissions:
   id-token: write
@@ -22,18 +21,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  setup:
-    name: Setup Deployment Variables
-    runs-on: ubuntu-latest
-    outputs:
-      deployment-name: ${{ steps.deployment-name.outputs.name }}
-    steps:
-      - name: Generate deployment name with timestamp
-        id: deployment-name
-        run: |
-          DEPLOYMENT_NAME="${{ env.DEPLOYMENT_NAME }}-$(date +%s)"
-          echo "name=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
-
   validate-bicep:
     name: Validate Bicep Template
     runs-on: ubuntu-latest
@@ -41,7 +28,7 @@ jobs:
       bicep-validation: ${{ steps.validate.outcome }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate Bicep syntax
         id: validate
@@ -60,11 +47,16 @@ jobs:
 
   what-if:
     name: Deployment What-If Preview
-    needs: [validate-bicep, setup]
+    needs: [ validate-bicep ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Generate deployment name with timestamp
+        id: deployment-name
+        run: |
+          echo "name=whatif-${{ env.ENVIRONMENT }}-$(date +%s)" >> "$GITHUB_OUTPUT"
 
       - name: Azure Login (OIDC)
         uses: azure/login@v3
@@ -77,52 +69,65 @@ jobs:
       - name: Run deployment what-if
         uses: Azure/bicep-deploy@v2
         with:
-          name: ${{ needs.setup.outputs.deployment-name }}
+          name: ${{ steps.deployment-name.outputs.name }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           scope: resourceGroup
           template-file: ./infra/main.bicep
           parameters-file: ./infra/main.bicepparam
           type: deployment
-          operation: what-if
+          operation: whatIf
 
       - name: Format what-if output for PR comment
         id: format-output
         run: |
-          echo "## 🔍 Deployment What-If Preview" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** \`${{ env.ENVIRONMENT }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Resource Group:** \`${{ env.RESOURCE_GROUP_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Name:** \`${{ needs.setup.outputs.deployment-name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Validation Status:" >> $GITHUB_STEP_SUMMARY
-          echo "✓ Template validation completed successfully" >> $GITHUB_STEP_SUMMARY
+          {
+            echo 'comment-body<<EOF'
+            echo "## 🔍 Deployment What-If Preview"
+            echo ""
+            echo "**Environment:** \`${{ env.ENVIRONMENT }}\`"
+            echo "**Resource Group:** \`${{ env.RESOURCE_GROUP_NAME }}\`"
+            echo "**Deployment Name:** \`${{ steps.deployment-name.outputs.name }}\`"
+            echo ""
+            echo "### Validation Status:"
+            echo "✓ Template validation completed successfully"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## 🔍 Deployment What-If Preview"
+            echo ""
+            echo "**Environment:** \`${{ env.ENVIRONMENT }}\`"
+            echo "**Resource Group:** \`${{ env.RESOURCE_GROUP_NAME }}\`"
+            echo "**Deployment Name:** \`${{ steps.deployment-name.outputs.name }}\`"
+            echo ""
+            echo "### Validation Status:"
+            echo "✓ Template validation completed successfully"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment PR with validation results
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
+        env:
+          PR_COMMENT_BODY: ${{ steps.format-output.outputs.comment-body }}
         with:
           script: |
-            const fs = require('fs');
-            const summary = process.env.GITHUB_STEP_SUMMARY;
-            const jobSummary = fs.readFileSync(summary, 'utf8');
-
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: jobSummary
+              body: process.env.PR_COMMENT_BODY
             });
 
   summary:
     name: Summary
-    needs: [validate-bicep, what-if]
+    needs: [ validate-bicep, what-if ]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check validation status
         run: |
-          if [ "${{ needs.validate-bicep.outcome }}" != "success" ] || [ "${{ needs.what-if.outcome }}" != "success" ]; then
+          if [ "${{ needs.validate-bicep.result }}" != "success" ] || [ "${{ needs.what-if.result }}" != "success" ]; then
             echo "❌ PR validation failed"
             exit 1
           else
