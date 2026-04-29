@@ -19,9 +19,14 @@ jobs:
     name: Destroy Deployment Stack
     runs-on: ubuntu-latest
     steps:
-      - name: empty
-        run: |
-          touch empty.bicep
+      - name: Azure Login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: false
+
       - name: Create or update deployment stack
         id: deploy
         uses: Azure/bicep-deploy@v2
