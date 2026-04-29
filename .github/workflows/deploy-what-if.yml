@@ -78,6 +78,7 @@ jobs:
         uses: Azure/bicep-deploy@v2
         with:
           name: ${{ needs.setup.outputs.deployment-name }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           scope: resourceGroup
           template-file: ./infra/main.bicep
