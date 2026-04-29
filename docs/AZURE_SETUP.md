@@ -62,18 +62,8 @@ $GITHUB_REPO = "azure-gh-actions-template"
 
 Get your subscription ID and tenant ID:
 
-**Bash:**
-
 ```bash
 az account show --query "{id: id, tenantId: tenantId}" --output table
-
-```
-
-**PowerShell:**
-
-```powershell
-az account show --query "{id: id, tenantId: tenantId}" --output table
-
 ```
 
 ## Step 2: Create Resource Group
@@ -197,7 +187,6 @@ az ad app federated-credential create \
     "audiences": ["api://AzureADTokenExchange"],
     "description": "GitHub Actions validation for pull requests"
   }'
-
 ```
 
 **PowerShell:**
@@ -214,7 +203,6 @@ $fedCredPR = @{
 az ad app federated-credential create `
   --id $AZURE_CLIENT_ID `
   --parameters $fedCredPR
-
 ```
 
 Verify federated credentials were created:
@@ -223,14 +211,12 @@ Verify federated credentials were created:
 
 ```bash
 az ad app federated-credential list --id "${AZURE_CLIENT_ID}"
-
 ```
 
 **PowerShell:**
 
 ```powershell
 az ad app federated-credential list --id $AZURE_CLIENT_ID
-
 ```
 
 ## Step 5: Configure GitHub Secrets and Environments
@@ -280,20 +266,9 @@ Or manually in GitHub UI:
 
 ### 5c: Verify Secrets
 
-**Bash:**
-
 ```bash
 # List secrets (names only, not values)
 gh secret list
-
-```
-
-**PowerShell:**
-
-```powershell
-# List secrets (names only, not values)
-gh secret list
-
 ```
 
 ## Step 6: Update Bicep Parameters
@@ -317,7 +292,6 @@ Edit `infra/main.parameters.dev.json`:
     }
   }
 }
-
 ```
 
 ## Step 7: Test the Setup
@@ -464,29 +438,13 @@ Once PR is merged to main:
 
 1. Test locally:
 
-   **Bash:**
-
    ```bash
-   az bicep build --file infra/main.bicep
-   ```
-
-   **PowerShell:**
-
-   ```powershell
    az bicep build --file infra/main.bicep
    ```
 
 2. Validate parameters:
 
-   **Bash:**
-
    ```bash
-   az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json
-   ```
-
-   **PowerShell:**
-
-   ```powershell
    az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json
    ```
 
@@ -498,18 +456,9 @@ To add staging and prod environments:
 
 1. Create parameter files:
 
-   **Bash:**
-
    ```bash
    cp infra/main.parameters.dev.json infra/main.parameters.staging.json
    cp infra/main.parameters.dev.json infra/main.parameters.prod.json
-   ```
-
-   **PowerShell:**
-
-   ```powershell
-   Copy-Item infra/main.parameters.dev.json infra/main.parameters.staging.json
-   Copy-Item infra/main.parameters.dev.json infra/main.parameters.prod.json
    ```
 
 2. Edit each with environment-specific values (location, SKU, tags, etc.)
