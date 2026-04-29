@@ -88,10 +88,10 @@ jobs:
           echo "## 📦 Deployment Outputs" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          OUTPUTS=$(az deployment group show \
+          OUTPUTS=$(az stack group show \
             --name "${{ steps.deployment-name.outputs.name }}" \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
-            --query properties.outputs)
+            --query outputs)
 
           echo '```json' >> $GITHUB_STEP_SUMMARY
           echo "$OUTPUTS" >> $GITHUB_STEP_SUMMARY
