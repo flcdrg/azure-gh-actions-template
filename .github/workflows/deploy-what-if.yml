@@ -107,7 +107,7 @@ jobs:
 
       - name: Comment PR with validation results
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           PR_COMMENT_BODY: ${{ steps.format-output.outputs.comment-body }}
         with:
