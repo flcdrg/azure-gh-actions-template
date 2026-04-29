@@ -39,10 +39,10 @@ jobs:
 
       - name: Check parameter file
         run: |
-          if [ -f "infra/main.parameters.${ENVIRONMENT}.json" ]; then
-            echo "✓ Parameter file found: infra/main.parameters.${ENVIRONMENT}.json"
+          if [ -f "infra/main.bicepparam" ]; then
+            echo "✓ Parameter file found: infra/main.bicepparam"
           else
-            echo "✗ Parameter file not found: infra/main.parameters.${ENVIRONMENT}.json"
+            echo "✗ Parameter file not found: infra/main.bicepparam"
             exit 1
           fi
 
@@ -77,7 +77,7 @@ jobs:
           OUTPUT=$(az deployment group what-if \
             --resource-group "${RESOURCE_GROUP_NAME}" \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${ENVIRONMENT}.json \
+            --parameters infra/main.bicepparam \
             --mode Incremental \
             --no-pretty-print 2>&1 || true)
           
@@ -114,7 +114,7 @@ jobs:
           az deployment group validate \
             --resource-group "${RESOURCE_GROUP_NAME}" \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${ENVIRONMENT}.json
+            --parameters infra/main.bicepparam
 
   summary:
     name: Summary

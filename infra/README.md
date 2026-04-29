@@ -8,9 +8,9 @@ This directory contains the infrastructure definitions using Azure Bicep for Azu
 - `variables.bicep` - Shared variables and naming conventions
 - `outputs.bicep` - Output definitions
 - `modules/storage.bicep` - Storage account module
-- `main.parameters.dev.json` - Development environment parameters
-- `main.parameters.staging.json` - Staging environment parameters (future)
-- `main.parameters.prod.json` - Production environment parameters (future)
+- `main.bicepparam` - Development environment parameters
+- `main.bicepparam.staging` - Staging environment parameters (future)
+- `main.bicepparam.prod` - Production environment parameters (future)
 
 ## Naming Conventions
 
@@ -33,11 +33,29 @@ Each module is independently deployable but orchestrated through `main.bicep`:
 
 ## Parameters
 
-All parameters are defined in environment-specific JSON files. To add a new parameter:
+All parameters are defined in environment-specific bicepparam files. To add a new parameter:
 
 1. Add the `@param` to `main.bicep`
-2. Update all `main.parameters.*.json` files with the new parameter
+2. Update all `main.bicepparam*` files with the new parameter
 3. Update the GitHub Actions workflow to pass the parameter if needed
+
+### Bicepparam Format
+
+Bicepparam files use a cleaner syntax than JSON ARM templates:
+
+```bicep
+using './main.bicep'
+
+param location = 'eastus'
+param environment = 'dev'
+param projectName = 'myapp'
+param orgPrefix = 'acme'
+param storageSkuName = 'Standard_LRS'
+param storageAccessTier = 'Hot'
+```
+
+For more information, see:
+[Microsoft Learn - Bicep parameter files](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/parameter-files?tabs=Bicep)
 
 ## Deployment
 

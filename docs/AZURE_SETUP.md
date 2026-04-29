@@ -273,25 +273,17 @@ gh secret list
 
 ## Step 6: Update Bicep Parameters
 
-Edit `infra/main.parameters.dev.json`:
+Edit `infra/main.bicepparam`:
 
-```json
-{
-  "parameters": {
-    "location": {
-      "value": "eastus"              // Your Azure region
-    },
-    "environment": {
-      "value": "dev"
-    },
-    "projectName": {
-      "value": "myapp"              // Your application name
-    },
-    "orgPrefix": {
-      "value": "acme"               // Your organization prefix
-    }
-  }
-}
+```bicep
+using './main.bicep'
+
+param location = 'eastus'                // Your Azure region
+param environment = 'dev'
+param projectName = 'myapp'              // Your application name
+param orgPrefix = 'acme'                 // Your organization prefix
+param storageSkuName = 'Standard_LRS'
+param storageAccessTier = 'Hot'
 ```
 
 ## Step 7: Test the Setup
@@ -445,7 +437,7 @@ Once PR is merged to main:
 2. Validate parameters:
 
    ```bash
-   az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json
+   az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.bicepparam
    ```
 
 3. Check Bicep module paths are relative to `infra/`
@@ -457,8 +449,8 @@ To add staging and prod environments:
 1. Create parameter files:
 
    ```bash
-   cp infra/main.parameters.dev.json infra/main.parameters.staging.json
-   cp infra/main.parameters.dev.json infra/main.parameters.prod.json
+   cp infra/main.bicepparam infra/main.bicepparam.staging
+   cp infra/main.bicepparam infra/main.bicepparam.prod
    ```
 
 2. Edit each with environment-specific values (location, SKU, tags, etc.)

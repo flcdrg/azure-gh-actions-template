@@ -23,7 +23,7 @@ deployment with PR validation and multi-environment support.
 - **variables.bicep**: Shared naming conventions, tags, computed values
 - **modules/*.bicep**: Reusable resource modules (e.g., storage.bicep)
 - **outputs.bicep**: Output definitions for workflow consumption
-- **main.parameters.*.json**: Environment-specific parameters (dev, staging, prod)
+- **main.bicepparam***: Environment-specific parameters using bicepparam format (dev, staging, prod)
 
 Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
 
@@ -86,7 +86,7 @@ az deployment group validate \
 az deployment group what-if \
   --resource-group "${RG}" \
   --template-file infra/main.bicep \
-  --parameters infra/main.parameters.dev.json \
+  --parameters infra/main.bicepparam \
   --mode Incremental
 
 ```
@@ -94,8 +94,8 @@ az deployment group what-if \
 **Parameter Validation**:
 
 ```bash
-# Ensure parameter file is valid JSON
-jq . infra/main.parameters.dev.json
+# Ensure bicepparam file is valid (Bicep CLI handles syntax)
+az bicep build --file infra/main.bicep
 
 ```
 
@@ -115,7 +115,7 @@ To add new environments (staging, prod):
 1. **Create parameter file**:
 
    ```bash
-   cp infra/main.parameters.dev.json infra/main.parameters.staging.json
+   cp infra/main.bicepparam infra/main.bicepparam.staging
    # Edit with environment-specific values (location, SKU, naming)
    ```
 
@@ -140,7 +140,7 @@ To add new environments (staging, prod):
 1. **Create module** in `infra/modules/resource.bicep` with @param inputs and outputs
 2. **Add to variables.bicep** if naming conventions needed
 3. **Import in main.bicep** via `module resourceModule 'modules/resource.bicep' = {...}`
-4. **Update parameters** in all `main.parameters.*.json` files
+4. **Update parameters** in all `main.bicepparam*` files
 5. **Test locally**: `az bicep build` and `az deployment group validate`
 6. **Document**: Update infra/README.md with new module purpose
 

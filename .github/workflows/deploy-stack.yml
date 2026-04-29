@@ -63,7 +63,7 @@ jobs:
           az deployment group validate \
             --resource-group "${RESOURCE_GROUP_NAME}" \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${ENVIRONMENT}.json
+            --parameters infra/main.bicepparam
           echo "✓ Template validation successful"
 
       - name: Create or update deployment stack
@@ -79,7 +79,7 @@ jobs:
             --name "${DEPLOYMENT_STACK_NAME}-$(date +%s)" \
             --resource-group "${RESOURCE_GROUP_NAME}" \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${ENVIRONMENT}.json \
+            --parameters infra/main.bicepparam \
             --mode Incremental
           
           echo "✓ Deployment completed successfully"
