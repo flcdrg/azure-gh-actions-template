@@ -2,7 +2,10 @@
 
 ## Project Overview
 
-**azure-gh-actions-template** is a production-ready template for deploying Azure infrastructure using GitHub Actions, Bicep IaC, and Azure Deployment Stacks with OIDC authentication. It demonstrates secure CI/CD patterns for infrastructure deployment with PR validation and multi-environment support.
+**azure-gh-actions-template** is a production-ready template for deploying Azure
+infrastructure using GitHub Actions, Bicep IaC, and Azure Deployment Stacks with
+OIDC authentication. It demonstrates secure CI/CD patterns for infrastructure
+deployment with PR validation and multi-environment support.
 
 ## Architecture
 
@@ -31,7 +34,7 @@ Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us
 - Both use `azure/login@v1` with OIDC (client-id, tenant-id, subscription-id from secrets)
 - Environment-aware via ENVIRONMENT variable resolved from parameter file naming
 
-### Documentation
+## Documentation
 
 - **docs/AZURE_SETUP.md**: Comprehensive setup guide with step-by-step CLI commands
   - Resource group creation
@@ -42,39 +45,67 @@ Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us
   - Troubleshooting guide
 - **infra/README.md**: Infrastructure template documentation
 - **README.md**: Quick start and feature overview
-- All Markdown should comply with Markdownlint rules for consistency and readability
+
+### Markdown Standards
+
+All Markdown files must comply with `.markdownlintrc` configuration:
+
+- **Line Length**: Maximum 120 characters per line (wrap longer lines)
+- **Code Blocks**: Proper syntax highlighting (bash, powershell, json, etc.)
+- **No Trailing Spaces**: Remove spaces at end of lines
+- **No Multiple Blank Lines**: Maximum 1 blank line between sections
+
+Validation commands:
+
+```bash
+# Install linter
+npm install -g markdownlint-cli
+
+# Validate all Markdown files
+markdownlint "*.md" "docs/*.md" ".github/*.md" "infra/*.md"
+```
+
+Before committing, ensure all Markdown passes linting.
 
 ## Build, Test, and Validation Commands
 
 **Bicep Validation** (used in workflows):
+
 ```bash
 az bicep build --file infra/main.bicep --outdir /tmp  # Check syntax
 az deployment group validate \
   --resource-group "${RG}" \
   --template-file infra/main.bicep \
   --parameters infra/main.parameters.dev.json  # Validate deployment
+
 ```
 
 **What-If Preview** (used in PR workflow):
+
 ```bash
 az deployment group what-if \
   --resource-group "${RG}" \
   --template-file infra/main.bicep \
   --parameters infra/main.parameters.dev.json \
   --mode Incremental
+
 ```
 
 **Parameter Validation**:
+
 ```bash
 # Ensure parameter file is valid JSON
 jq . infra/main.parameters.dev.json
+
 ```
 
 **Workflow Testing Locally**:
+
 ```bash
 # Install act: https://github.com/nektos/act
 act pull_request -l  # List what runs on PR
 act pull_request -j validate-bicep  # Test a specific job
+
 ```
 
 ## Multi-Environment Extension
@@ -82,6 +113,7 @@ act pull_request -j validate-bicep  # Test a specific job
 To add new environments (staging, prod):
 
 1. **Create parameter file**:
+
    ```bash
    cp infra/main.parameters.dev.json infra/main.parameters.staging.json
    # Edit with environment-specific values (location, SKU, naming)
@@ -89,9 +121,11 @@ To add new environments (staging, prod):
 
 2. **Create GitHub environment**: Settings → Environments → New
 
-3. **Update workflows** to parameterize environment selection (currently hardcoded to 'dev')
+3. **Update workflows** to parameterize environment selection
+   (currently hardcoded to 'dev')
 
-4. **Bicep conventions remain unchanged**: modules and structure scale to any environment via parameter files
+4. **Bicep conventions remain unchanged**: modules and structure scale to any
+   environment via parameter files
 
 ## Azure Integration Notes
 
@@ -122,6 +156,7 @@ To add new environments (staging, prod):
 ## Troubleshooting
 
 See **docs/AZURE_SETUP.md** for:
+
 - OIDC token exchange failures
 - Service principal permission issues
 - Resource group not found errors

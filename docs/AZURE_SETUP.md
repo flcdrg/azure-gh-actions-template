@@ -23,6 +23,7 @@ The deployment process uses:
 Replace these values with your own:
 
 **Bash:**
+
 ```bash
 # Azure settings
 export AZURE_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -37,9 +38,11 @@ export ENVIRONMENT="dev"
 # GitHub settings
 export GITHUB_ORG="your-org-or-username"
 export GITHUB_REPO="azure-gh-actions-template"
+
 ```
 
 **PowerShell:**
+
 ```powershell
 # Azure settings
 $AZURE_SUBSCRIPTION_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -54,23 +57,29 @@ $ENVIRONMENT = "dev"
 # GitHub settings
 $GITHUB_ORG = "your-org-or-username"
 $GITHUB_REPO = "azure-gh-actions-template"
+
 ```
 
 Get your subscription ID and tenant ID:
 
 **Bash:**
+
 ```bash
 az account show --query "{id: id, tenantId: tenantId}" --output table
+
 ```
 
 **PowerShell:**
+
 ```powershell
 az account show --query "{id: id, tenantId: tenantId}" --output table
+
 ```
 
 ## Step 2: Create Resource Group
 
 **Bash:**
+
 ```bash
 az group create \
   --name "${AZURE_RESOURCE_GROUP}" \
@@ -78,9 +87,11 @@ az group create \
 
 # Verify
 az group show --name "${AZURE_RESOURCE_GROUP}"
+
 ```
 
 **PowerShell:**
+
 ```powershell
 az group create `
   --name $AZURE_RESOURCE_GROUP `
@@ -88,11 +99,13 @@ az group create `
 
 # Verify
 az group show --name $AZURE_RESOURCE_GROUP
+
 ```
 
 ## Step 3: Create Service Principal
 
 **Bash:**
+
 ```bash
 # Create service principal
 SP_OUTPUT=$(az ad sp create-for-rbac \
@@ -108,9 +121,11 @@ echo "Service Principal created:"
 echo "  Client ID (AppId): $AZURE_CLIENT_ID"
 echo ""
 echo "⚠️  Important: Save these values. The password will not be shown again."
+
 ```
 
 **PowerShell:**
+
 ```powershell
 # Create service principal
 $spName = "sp-github-$APP_NAME-$ENVIRONMENT"
@@ -127,6 +142,7 @@ Write-Output "Service Principal created:"
 Write-Output "  Client ID (AppId): $AZURE_CLIENT_ID"
 Write-Output ""
 Write-Output "⚠️  Important: Save these values. The password will not be shown again."
+
 ```
 
 ## Step 4: Create Federated Credentials
@@ -136,6 +152,7 @@ Federated credentials allow GitHub to obtain short-lived tokens without storing 
 ### 4a: Main branch deployments (push to main)
 
 **Bash:**
+
 ```bash
 az ad app federated-credential create \
   --id "${AZURE_CLIENT_ID}" \
@@ -146,9 +163,11 @@ az ad app federated-credential create \
     "audiences": ["api://AzureADTokenExchange"],
     "description": "GitHub Actions deployment from main branch"
   }'
+
 ```
 
 **PowerShell:**
+
 ```powershell
 $fedCredMain = @{
   name = "GitHub-Deployments-Main"
@@ -161,11 +180,13 @@ $fedCredMain = @{
 az ad app federated-credential create `
   --id $AZURE_CLIENT_ID `
   --parameters $fedCredMain
+
 ```
 
 ### 4b: Pull request validation (PR events)
 
 **Bash:**
+
 ```bash
 az ad app federated-credential create \
   --id "${AZURE_CLIENT_ID}" \
@@ -176,9 +197,11 @@ az ad app federated-credential create \
     "audiences": ["api://AzureADTokenExchange"],
     "description": "GitHub Actions validation for pull requests"
   }'
+
 ```
 
 **PowerShell:**
+
 ```powershell
 $fedCredPR = @{
   name = "GitHub-PRs"
@@ -191,18 +214,23 @@ $fedCredPR = @{
 az ad app federated-credential create `
   --id $AZURE_CLIENT_ID `
   --parameters $fedCredPR
+
 ```
 
 Verify federated credentials were created:
 
 **Bash:**
+
 ```bash
 az ad app federated-credential list --id "${AZURE_CLIENT_ID}"
+
 ```
 
 **PowerShell:**
+
 ```powershell
 az ad app federated-credential list --id $AZURE_CLIENT_ID
+
 ```
 
 ## Step 5: Configure GitHub Secrets and Environments
@@ -221,19 +249,23 @@ In GitHub:
 Add these secrets at repository level (Settings → Secrets and variables → Actions):
 
 **Bash (using GitHub CLI):**
+
 ```bash
 gh secret set AZURE_TENANT_ID --body "${AZURE_TENANT_ID}"
 gh secret set AZURE_CLIENT_ID --body "${AZURE_CLIENT_ID}"
 gh secret set AZURE_SUBSCRIPTION_ID --body "${AZURE_SUBSCRIPTION_ID}"
 gh secret set RESOURCE_GROUP_NAME --body "${AZURE_RESOURCE_GROUP}"
+
 ```
 
 **PowerShell (using GitHub CLI):**
+
 ```powershell
 gh secret set AZURE_TENANT_ID --body $AZURE_TENANT_ID
 gh secret set AZURE_CLIENT_ID --body $AZURE_CLIENT_ID
 gh secret set AZURE_SUBSCRIPTION_ID --body $AZURE_SUBSCRIPTION_ID
 gh secret set RESOURCE_GROUP_NAME --body $AZURE_RESOURCE_GROUP
+
 ```
 
 Or manually in GitHub UI:
@@ -249,15 +281,19 @@ Or manually in GitHub UI:
 ### 5c: Verify Secrets
 
 **Bash:**
+
 ```bash
 # List secrets (names only, not values)
 gh secret list
+
 ```
 
 **PowerShell:**
+
 ```powershell
 # List secrets (names only, not values)
 gh secret list
+
 ```
 
 ## Step 6: Update Bicep Parameters
@@ -281,6 +317,7 @@ Edit `infra/main.parameters.dev.json`:
     }
   }
 }
+
 ```
 
 ## Step 7: Test the Setup
@@ -288,6 +325,7 @@ Edit `infra/main.parameters.dev.json`:
 ### 7a: Test OIDC Token Exchange Locally
 
 **Bash:**
+
 ```bash
 # This simulates what GitHub Actions does
 # (For testing purposes only; normally done by Actions)
@@ -297,9 +335,11 @@ GITHUB_TOKEN=$(gh auth token)
 
 # 2. In GitHub Actions environment, the token is injected automatically
 # The workflows will use this to authenticate with Azure
+
 ```
 
 **PowerShell:**
+
 ```powershell
 # This simulates what GitHub Actions does
 # (For testing purposes only; normally done by Actions)
@@ -309,6 +349,7 @@ $GITHUB_TOKEN = gh auth token
 
 # 2. In GitHub Actions environment, the token is injected automatically
 # The workflows will use this to authenticate with Azure
+
 ```
 
 ### 7b: Create Test PR
@@ -335,14 +376,16 @@ Once PR is merged to main:
 
 **Solution**:
 
-1. Verify federated credentials: 
+1. Verify federated credentials:
 
    **Bash:**
+
    ```bash
    az ad app federated-credential list --id "${AZURE_CLIENT_ID}"
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az ad app federated-credential list --id $AZURE_CLIENT_ID
    ```
@@ -356,14 +399,16 @@ Once PR is merged to main:
 
 **Solution**:
 
-1. Check role assignment: 
+1. Check role assignment:
 
    **Bash:**
+
    ```bash
    az role assignment list --assignee "${AZURE_CLIENT_ID}"
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az role assignment list --assignee $AZURE_CLIENT_ID
    ```
@@ -371,14 +416,16 @@ Once PR is merged to main:
 2. Assign Contributor role if missing:
 
    **Bash:**
+
    ```bash
    az role assignment create \
      --assignee "${AZURE_CLIENT_ID}" \
      --role Contributor \
      --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}"
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az role assignment create `
      --assignee $AZURE_CLIENT_ID `
@@ -392,14 +439,16 @@ Once PR is merged to main:
 
 **Solution**:
 
-1. Verify RG exists: 
+1. Verify RG exists:
 
    **Bash:**
+
    ```bash
    az group list --query "[].name" --output table
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az group list --query "[].name" --output table
    ```
@@ -413,26 +462,30 @@ Once PR is merged to main:
 
 **Solution**:
 
-1. Test locally: 
+1. Test locally:
 
    **Bash:**
+
    ```bash
    az bicep build --file infra/main.bicep
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az bicep build --file infra/main.bicep
    ```
 
-2. Validate parameters: 
+2. Validate parameters:
 
    **Bash:**
+
    ```bash
    az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json
    ```
@@ -446,12 +499,14 @@ To add staging and prod environments:
 1. Create parameter files:
 
    **Bash:**
+
    ```bash
    cp infra/main.parameters.dev.json infra/main.parameters.staging.json
    cp infra/main.parameters.dev.json infra/main.parameters.prod.json
    ```
-   
+
    **PowerShell:**
+
    ```powershell
    Copy-Item infra/main.parameters.dev.json infra/main.parameters.staging.json
    Copy-Item infra/main.parameters.dev.json infra/main.parameters.prod.json
@@ -470,6 +525,7 @@ To add staging and prod environments:
 To remove all resources and the service principal:
 
 **Bash:**
+
 ```bash
 # Delete resource group (removes all resources)
 az group delete --name "${AZURE_RESOURCE_GROUP}" --yes
@@ -482,9 +538,11 @@ gh secret delete AZURE_TENANT_ID
 gh secret delete AZURE_CLIENT_ID
 gh secret delete AZURE_SUBSCRIPTION_ID
 gh secret delete RESOURCE_GROUP_NAME
+
 ```
 
 **PowerShell:**
+
 ```powershell
 # Delete resource group (removes all resources)
 az group delete --name $AZURE_RESOURCE_GROUP --yes
@@ -497,6 +555,7 @@ gh secret delete AZURE_TENANT_ID
 gh secret delete AZURE_CLIENT_ID
 gh secret delete AZURE_SUBSCRIPTION_ID
 gh secret delete RESOURCE_GROUP_NAME
+
 ```
 
 ## Additional Resources

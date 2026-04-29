@@ -15,10 +15,13 @@ This directory contains the infrastructure definitions using Azure Bicep for Azu
 ## Naming Conventions
 
 Resources follow Azure Cloud Adoption Framework naming standards:
-- **Storage Account**: `{orgprefix}{projectname}{environment}{unique}` (lowercase, 24 chars max)
+
+- **Storage Account**: `{orgprefix}{projectname}{environment}{unique}`
+  (lowercase, 24 chars max)
 - **Other Resources**: `{orgprefix}-{projectname}-{environment}-{resourcetype}`
 
-Reference: [Azure Resource Abbreviations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations)
+Reference:
+[Azure Resource Abbreviations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations)
 
 ## Modular Design
 
@@ -39,6 +42,7 @@ All parameters are defined in environment-specific JSON files. To add a new para
 ## Deployment
 
 Deployment is managed by GitHub Actions workflows in `.github/workflows/`:
+
 - `deploy-what-if.yml` - Validates changes on PR
 - `deploy-stack.yml` - Deploys on main branch
 

@@ -1,6 +1,7 @@
 # Azure GitHub Actions Template
 
-A production-ready template for deploying Azure infrastructure using GitHub Actions, Bicep, and Azure Deployment Stacks with OIDC authentication.
+A production-ready template for deploying Azure infrastructure using GitHub
+Actions, Bicep, and Azure Deployment Stacks with OIDC authentication.
 
 ## 🚀 Features
 
@@ -30,6 +31,7 @@ Follow the comprehensive setup guide:
 # - Creating a service principal
 # - Setting up OIDC federated credentials
 # - Configuring GitHub Secrets
+
 ```
 
 **Quick summary**:
@@ -52,6 +54,7 @@ az ad sp create-for-rbac \
   --scopes "/subscriptions/${AZURE_SUBSCRIPTION_ID}"
 
 # Create federated credentials (see AZURE_SETUP.md for full commands)
+
 ```
 
 ### 2. Add GitHub Secrets
@@ -75,6 +78,7 @@ vim infra/main.parameters.dev.json
 # - location: Azure region for deployment
 # - projectName: Your application name
 # - orgPrefix: Your organization prefix
+
 ```
 
 ### 4. Deploy
@@ -86,6 +90,7 @@ git checkout -b feature/my-changes
 # Make changes to infra/
 git push origin feature/my-changes
 # Create PR in GitHub
+
 ```
 
 The PR workflow (`deploy-what-if.yml`) will:
@@ -100,6 +105,7 @@ Merge the PR to deploy to dev:
 # After PR is approved and merged to main
 # The deploy-stack.yml workflow triggers automatically
 # Monitor in Actions tab
+
 ```
 
 ## 📁 Repository Structure
@@ -123,6 +129,7 @@ Merge the PR to deploy to dev:
 │   └── README.md                 # Infrastructure documentation
 ├── README.md
 └── LICENSE
+
 ```
 
 ## 🔐 Security
@@ -231,3 +238,23 @@ See [Bicep Troubleshooting](docs/AZURE_SETUP.md#bicep-validation-fails) in the s
 ## 📝 License
 
 This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+
+## 🛠️ Contributing
+
+### Code Quality Standards
+
+All Markdown documentation must pass linting checks:
+
+```bash
+npm install -g markdownlint-cli
+markdownlint "*.md" "docs/*.md" ".github/*.md" "infra/*.md"
+```
+
+**Markdown Standards** (.markdownlintrc):
+
+- Line length: Maximum 120 characters (wrap longer lines)
+- No trailing spaces at end of lines
+- Maximum 1 blank line between sections
+- Code blocks must have syntax highlighting
+
+Before committing documentation changes, run the linter and fix any warnings.
