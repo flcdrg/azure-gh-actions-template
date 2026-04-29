@@ -114,8 +114,8 @@ Merge the PR to deploy to dev:
 .
 ├── .github/
 │   ├── workflows/
-│   │   ├── deploy-what-if.yml    # PR validation workflow
-│   │   └── deploy-stack.yml      # Main branch deployment workflow
+│   │   ├── deploy-what-if.yml    # PR validation workflow (uses bicep-deploy action)
+│   │   └── deploy-stack.yml      # Main branch deployment workflow (deploymentStack)
 │   └── copilot-instructions.md   # Copilot configuration
 ├── docs/
 │   └── AZURE_SETUP.md            # Comprehensive setup guide
@@ -125,7 +125,9 @@ Merge the PR to deploy to dev:
 │   ├── outputs.bicep             # Output definitions
 │   ├── modules/
 │   │   └── storage.bicep         # Storage account module
-│   ├── main.parameters.dev.json  # Dev environment parameters
+│   ├── main.bicepparam           # Dev environment parameters (bicepparam format)
+│   ├── main.bicepparam.staging   # Staging environment parameters (future)
+│   ├── main.bicepparam.prod      # Production environment parameters (future)
 │   └── README.md                 # Infrastructure documentation
 ├── README.md
 └── LICENSE
@@ -147,14 +149,16 @@ Merge the PR to deploy to dev:
 
 Triggered on: Pull requests to `main` (when infra changes detected)
 
-Steps:
+Purpose: Validates infrastructure changes before merge
 
-1. Validates Bicep syntax
-2. Checks parameter files exist
-3. Authenticates to Azure via OIDC
-4. Runs `az deployment group what-if`
-5. Comments PR with expected changes
-6. Validates template would deploy successfully
+Jobs:
+
+1. **setup**: Generates deployment name with timestamp (output variable)
+2. **validate-bicep**: Validates Bicep syntax and parameters
+3. **what-if**: Runs validation using Azure/bicep-deploy action
+   - Uses regular `deployment` mode (not deploymentStack)
+   - Uses `azure/login@v2` for OIDC authentication
+   - Comments PR with validation results
 
 ### deploy-stack.yml
 
@@ -163,13 +167,20 @@ Triggered on:
 - Push to `main` branch (after PR merge)
 - Manual workflow dispatch via GitHub UI
 
-Steps:
+Purpose: Creates or updates Deployment Stack for resource lifecycle management
 
-1. Authenticates to Azure via OIDC
-2. Validates resource group exists
-3. Validates Bicep template
-4. Creates or updates deployment stack
-5. Outputs deployment information
+Jobs:
+
+1. **setup**: Generates deployment stack name with timestamp (output variable)
+2. **deploy**: Main deployment job
+   - Validates resource group exists
+   - Validates Bicep template
+   - Uses Azure/bicep-deploy@v0.3.0 for what-if preview
+   - Creates/updates Deployment Stack via `az deployment group create`
+   - Retrieves and displays deployment outputs using consistent deployment name
+
+**Key Feature**: Deployment name is calculated once in setup job and reused across
+all steps to ensure consistent naming for what-if preview and actual deployment.
 
 ## 📦 Deployment Stacks
 
@@ -192,7 +203,7 @@ To add staging or production environments:
 1. **Create parameter file**:
 
    ```bash
-   cp infra/main.parameters.dev.json infra/main.parameters.prod.json
+   cp infra/main.bicepparam infra/main.bicepparam.staging
    ```
 
 2. **Update parameters** for your environment
@@ -202,8 +213,8 @@ To add staging or production environments:
 4. **Update workflows** to support environment selection:
 
    ```yaml
-   - Update deploy-stack.yml to parameterize environment
-   - Add approval rules in GitHub Environments if desired
+   # Modify deploy-stack.yml to use selected environment's bicepparam file
+   # Add approval rules in GitHub Environments if desired
    ```
 
 See [Multi-Environment Setup](docs/AZURE_SETUP.md#multi-environment-setup) for detailed instructions.
