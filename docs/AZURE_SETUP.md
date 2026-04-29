@@ -268,6 +268,72 @@ Or manually in GitHub UI:
 gh secret list
 ```
 
+### 5d: Create GitHub Environment for 'dev' (with federated credentials)
+
+To enable deployments specifically in the dev GitHub environment with federated identity:
+
+**Via GitHub UI:**
+
+1. Go to repository **Settings** → **Environments**
+2. Click **New environment** (or select existing 'dev')
+3. Name it: `dev`
+4. (Optional) Add deployment protection rules for approval gate
+5. Environment secrets are not needed—repository secrets are sufficient
+
+**Note**: The federated credentials you created in Step 4 (`GitHub-Main` and `GitHub-PRs`)
+work across all environments. The GitHub environment is primarily for organization and
+access control.
+
+### 5e: Create Environment-Specific Federated Credential (Optional)
+
+If you want a separate federated credential specifically scoped to the dev environment:
+
+**Bash:**
+
+```bash
+az ad app federated-credential create \
+  --id "${AZURE_CLIENT_ID}" \
+  --parameters '{
+    "name": "GitHub-Dev-Environment",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:'"${GITHUB_ORG}"'/'"${GITHUB_REPO}"':environment:dev",
+    "audiences": ["api://AzureADTokenExchange"],
+    "description": "GitHub Actions deployments to dev environment"
+  }'
+```
+
+**PowerShell:**
+
+```powershell
+$fedCredDev = @{
+  name = "GitHub-Dev-Environment"
+  issuer = "https://token.actions.githubusercontent.com"
+  subject = "repo:$GITHUB_ORG/$GITHUB_REPO`:environment:dev"
+  audiences = @("api://AzureADTokenExchange")
+  description = "GitHub Actions deployments to dev environment"
+} | ConvertTo-Json
+
+$fedCredDev | az ad app federated-credential create `
+  --id $AZURE_CLIENT_ID `
+  --parameters "@-"
+```
+
+Verify the new credential:
+
+**Bash:**
+
+```bash
+az ad app federated-credential list --id "${AZURE_CLIENT_ID}" --query \
+  "[?name=='GitHub-Dev-Environment']"
+```
+
+**PowerShell:**
+
+```powershell
+az ad app federated-credential list --id $AZURE_CLIENT_ID | `
+  ConvertFrom-Json | Where-Object { $_.name -eq "GitHub-Dev-Environment" }
+```
+
 ## Step 6: Update Bicep Parameters
 
 Edit `infra/main.bicepparam`:

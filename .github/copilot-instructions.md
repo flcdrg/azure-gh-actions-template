@@ -39,7 +39,8 @@ Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us
 - **docs/AZURE_SETUP.md**: Comprehensive setup guide with step-by-step CLI commands
   - Resource group creation
   - Service principal creation
-  - OIDC federated credential setup
+  - OIDC federated credential setup (main, PRs, and dev environment-specific)
+  - GitHub environment configuration
   - GitHub Secret configuration
   - Multi-environment scaling instructions
   - Troubleshooting guide
