@@ -74,7 +74,7 @@ jobs:
           name: ${{ steps.deployment-name.outputs.name }}
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           template-file: ./infra/main.bicep
-          parameters: ./infra/main.bicepparam
+          parameters-file: ./infra/main.bicepparam
           type: deploymentStack
           scope: resourceGroup
           operation: create
