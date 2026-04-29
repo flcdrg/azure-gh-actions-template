@@ -33,6 +33,7 @@ Follow the comprehensive setup guide:
 ```
 
 **Quick summary**:
+
 ```bash
 # Set your values
 export AZURE_SUBSCRIPTION_ID="your-sub-id"
@@ -56,6 +57,7 @@ az ad sp create-for-rbac \
 ### 2. Add GitHub Secrets
 
 Add these repository secrets (Settings → Secrets and variables → Actions):
+
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_ID`
 - `AZURE_SUBSCRIPTION_ID`
@@ -87,6 +89,7 @@ git push origin feature/my-changes
 ```
 
 The PR workflow (`deploy-what-if.yml`) will:
+
 - ✅ Validate Bicep syntax
 - ✅ Run deployment what-if preview
 - ✅ Comment on the PR with expected changes
@@ -101,7 +104,7 @@ Merge the PR to deploy to dev:
 
 ## 📁 Repository Structure
 
-```
+```text
 .
 ├── .github/
 │   ├── workflows/
@@ -138,6 +141,7 @@ Merge the PR to deploy to dev:
 Triggered on: Pull requests to `main` (when infra changes detected)
 
 Steps:
+
 1. Validates Bicep syntax
 2. Checks parameter files exist
 3. Authenticates to Azure via OIDC
@@ -148,10 +152,12 @@ Steps:
 ### deploy-stack.yml
 
 Triggered on:
+
 - Push to `main` branch (after PR merge)
 - Manual workflow dispatch via GitHub UI
 
 Steps:
+
 1. Authenticates to Azure via OIDC
 2. Validates resource group exists
 3. Validates Bicep template
@@ -161,11 +167,13 @@ Steps:
 ## 📦 Deployment Stacks
 
 Azure Deployment Stacks manage resource lifecycle:
+
 - **Create**: Initial deployment creates a stack
 - **Update**: Subsequent deployments update the stack
 - **Delete**: Stack can cleanly remove managed resources
 
 Benefits:
+
 - Prevents accidental deletion of managed resources
 - Tracks all resources created by a stack
 - Supports deny assignments for protection
@@ -175,6 +183,7 @@ Benefits:
 To add staging or production environments:
 
 1. **Create parameter file**:
+
    ```bash
    cp infra/main.parameters.dev.json infra/main.parameters.prod.json
    ```
@@ -184,6 +193,7 @@ To add staging or production environments:
 3. **Create GitHub environment** (Settings → Environments)
 
 4. **Update workflows** to support environment selection:
+
    ```yaml
    - Update deploy-stack.yml to parameterize environment
    - Add approval rules in GitHub Environments if desired

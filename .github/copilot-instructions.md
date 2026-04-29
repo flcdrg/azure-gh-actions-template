@@ -42,6 +42,7 @@ Naming follows Azure Cloud Adoption Framework: https://learn.microsoft.com/en-us
   - Troubleshooting guide
 - **infra/README.md**: Infrastructure template documentation
 - **README.md**: Quick start and feature overview
+- All Markdown should comply with Markdownlint rules for consistency and readability
 
 ## Build, Test, and Validation Commands
 

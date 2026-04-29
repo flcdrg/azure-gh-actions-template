@@ -12,6 +12,7 @@ This guide provides step-by-step instructions for configuring Azure resources an
 ## Overview
 
 The deployment process uses:
+
 - **OIDC Federated Identity**: Secure, credential-free authentication from GitHub Actions to Azure
 - **Resource Group**: Container for all deployed resources
 - **Service Principal**: Azure identity used by GitHub Actions
@@ -116,6 +117,7 @@ az ad app federated-credential list --id "${AZURE_CLIENT_ID}"
 ### 5a: Create 'dev' environment (if not exists)
 
 In GitHub:
+
 1. Go to repository **Settings** → **Environments**
 2. Click **New environment**
 3. Name it: `dev`
@@ -134,6 +136,7 @@ gh secret set RESOURCE_GROUP_NAME --body "${AZURE_RESOURCE_GROUP}"
 ```
 
 Or manually in GitHub UI:
+
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret**
 3. Add each secret:
@@ -198,6 +201,7 @@ GITHUB_TOKEN=$(gh auth token)
 ### 7c: Deploy to Dev
 
 Once PR is merged to main:
+
 1. The `deploy-stack.yml` workflow triggers automatically
 2. View the run in **Actions** tab
 3. Verify resources in Azure portal
@@ -209,6 +213,7 @@ Once PR is merged to main:
 **Error**: `azure/login` step fails with OIDC error
 
 **Solution**:
+
 1. Verify federated credentials: `az ad app federated-credential list --id "${AZURE_CLIENT_ID}"`
 2. Ensure Subject matches exactly: `repo:ORG/REPO:ref:refs/heads/main`
 3. Check issuer URL is correct: `https://token.actions.githubusercontent.com`
@@ -218,8 +223,10 @@ Once PR is merged to main:
 **Error**: Deployment fails with "Insufficient privileges"
 
 **Solution**:
+
 1. Check role assignment: `az role assignment list --assignee "${AZURE_CLIENT_ID}"`
 2. Assign Contributor role if missing:
+
    ```bash
    az role assignment create \
      --assignee "${AZURE_CLIENT_ID}" \
@@ -232,6 +239,7 @@ Once PR is merged to main:
 **Error**: `Resource group 'rg-...' not found`
 
 **Solution**:
+
 1. Verify RG exists: `az group list --query "[].name" --output table`
 2. Check `RESOURCE_GROUP_NAME` secret matches exactly
 3. Ensure secret is in correct scope (repository, not organization)
@@ -241,6 +249,7 @@ Once PR is merged to main:
 **Error**: Bicep build error during workflow
 
 **Solution**:
+
 1. Test locally: `az bicep build --file infra/main.bicep`
 2. Validate parameters: `az deployment group validate --resource-group ... --template-file infra/main.bicep --parameters infra/main.parameters.dev.json`
 3. Check Bicep module paths are relative to `infra/`
@@ -250,6 +259,7 @@ Once PR is merged to main:
 To add staging and prod environments:
 
 1. Create parameter files:
+
    ```bash
    cp infra/main.parameters.dev.json infra/main.parameters.staging.json
    cp infra/main.parameters.dev.json infra/main.parameters.prod.json
