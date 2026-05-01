@@ -2,9 +2,9 @@ name: Destroy
 
 on:
   workflow_dispatch:
-  
+
   schedule:
-    - cron: '0 0 * * *' # Every night at midnight
+    - cron: "0 0 * * *" # Every night at midnight
 
 env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

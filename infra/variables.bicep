@@ -20,7 +20,8 @@ var resourcePrefix = '${resourceOrgPrefix}${toLower(projectName)}-${toLower(envi
 
 // Storage account naming: lowercase, alphanumeric, 3-24 characters
 // Format: {orgprefix}{projectname}{environment}{random}
-var storageAccountName = replace(substring('${toLower(orgPrefix)}${toLower(projectName)}${toLower(environment)}${uniqueString(resourceGroup().id)}', 0, 24), '-', '')
+var storageAccountNameBase = replace('${toLower(orgPrefix)}${toLower(projectName)}${toLower(environment)}${uniqueString(resourceGroup().id)}', '-', '')
+var storageAccountName = substring(storageAccountNameBase, 0, min(length(storageAccountNameBase), 24))
 
 // Standard tags for all resources
 var commonTags = {

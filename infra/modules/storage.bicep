@@ -55,6 +55,7 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2025-08-01
   parent: storageAccount
   name: 'default'
 }
+
 output storageAccountId string = storageAccount.id
 output storageAccountName string = storageAccount.name
 output primaryBlobEndpoint string = storageAccount.properties.primaryEndpoints.blob

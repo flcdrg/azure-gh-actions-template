@@ -498,8 +498,8 @@ function New-GitHubSecrets {
     }
 
     foreach ($key in $Secrets.Keys) {
-        Write-Info "Setting secret: $key"
-        $Secrets[$key] | & gh secret set $key --repo $Org/$Repo --body - 2>&1 | Where-Object { $_ -notmatch '✓ Set secret' } | ForEach-Object {
+        Write-Info "Setting secret: $key to $($Secrets[$key])"
+        & gh secret set $key --repo $Org/$Repo --body $Secrets[$key] 2>&1 | Where-Object { $_ -notmatch '✓ Set secret' } | ForEach-Object {
             if ($_ -and $_ -notmatch '^$') { Write-Info "  $_" }
         }
         Write-Success "  Configured: $key"
