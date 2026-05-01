@@ -105,6 +105,8 @@ SP_OUTPUT=$(az ad sp create-for-rbac \
 # Extract values for use in later steps
 export AZURE_CLIENT_ID=$(echo "$SP_OUTPUT" | jq -r '.appId')
 
+az role assignment create --assignee "${AZURE_CLIENT_ID}" --role "Role Based Access Control Administrator" --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP}"
+
 echo "Service Principal created:"
 echo "  Client ID (AppId): $AZURE_CLIENT_ID"
 echo ""
@@ -125,6 +127,8 @@ $SP_OUTPUT = az ad sp create-for-rbac `
 
 # Extract values for use in later steps
 $AZURE_CLIENT_ID = $SP_OUTPUT.appId
+
+az role assignment create --assignee "$AZURE_CLIENT_ID" --role "Role Based Access Control Administrator" --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP"
 
 Write-Output "Service Principal created:"
 Write-Output "  Client ID (AppId): $AZURE_CLIENT_ID"

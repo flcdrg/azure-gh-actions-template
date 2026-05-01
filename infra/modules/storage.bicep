@@ -17,7 +17,7 @@ param accessTier string = 'Hot'
 param tags object = {}
 
 // Storage account resource
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
   name: storageAccountName
   location: location
   kind: 'StorageV2'
@@ -50,6 +50,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   tags: tags
 }
 
+// Blob services
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2025-08-01' = {
+  parent: storageAccount
+  name: 'default'
+}
 output storageAccountId string = storageAccount.id
 output storageAccountName string = storageAccount.name
 output primaryBlobEndpoint string = storageAccount.properties.primaryEndpoints.blob

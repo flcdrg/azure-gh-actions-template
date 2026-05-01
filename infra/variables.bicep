@@ -12,10 +12,11 @@ param environment string
 param projectName string
 
 @description('Organization abbreviation for resource naming')
-param orgPrefix string = 'org'
+param orgPrefix string = ''
 
 // Computed values for consistent naming
-var resourcePrefix = '${toLower(orgPrefix)}-${toLower(projectName)}-${toLower(environment)}'
+var resourceOrgPrefix = length(orgPrefix) > 0 ? '${toLower(orgPrefix)}-' : ''
+var resourcePrefix = '${resourceOrgPrefix}${toLower(projectName)}-${toLower(environment)}'
 
 // Storage account naming: lowercase, alphanumeric, 3-24 characters
 // Format: {orgprefix}{projectname}{environment}{random}
